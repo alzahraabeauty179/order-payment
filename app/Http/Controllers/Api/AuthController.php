@@ -9,7 +9,6 @@ use App\Http\Resources\UserResource;
 use App\Services\AuthService;
 use Exception;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {

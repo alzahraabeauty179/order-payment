@@ -19,6 +19,8 @@ class AuthService
             $user = User::create([
                 'name' => $data['name'],
                 'email' => $data['email'],
+                'phone_number' => $data['phone_number'],
+                'address' => $data['address'],
                 'password' => bcrypt($data['password']),
             ]);
         } catch (Exception $ex) {
