@@ -3,6 +3,7 @@ namespace App\Services;
 
 use App\Models\User;
 use Exception;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
 class AuthService 
@@ -36,7 +37,7 @@ class AuthService
      */
     public function login (array $data) : array
     {
-        if (! $token = auth()->attempt(
+        if (! $token = Auth::attempt(
             ['email' => $data['email'], 'password' => $data['password']], $data['remember'] ?? false
         )){
             throw ValidationException::withMessages([
@@ -45,7 +46,7 @@ class AuthService
         }
 
         return [
-            'user' => auth()->user(),
+            'user' => Auth::user(),
             'token' => $token,
         ];
     }
