@@ -25,10 +25,10 @@ class OrderController extends Controller
      * @param OrderStoreRequest $request
      * @return JsonResponse
      */
-    public function store (OrderStoreRequest $request): JsonResponse
+    public function makeOrder (OrderStoreRequest $request): JsonResponse
     {
         try {
-            $order = $this->orderService->createOrder($request->validated());
+            $order = $this->orderService->makeOrder($request->validated());
 
             return response()->json([
                 'message' => 'Order created successfully.',

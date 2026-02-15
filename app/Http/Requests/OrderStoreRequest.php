@@ -11,7 +11,7 @@ class OrderStoreRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return auth()->check();
     }
 
     /**
@@ -23,8 +23,8 @@ class OrderStoreRequest extends FormRequest
     {
         return [
             'products' => 'required|array|min:1',
-            'product.*.id' => 'required|exists:products,id',
-            'product.*.quantity' => 'required|integer|min:1',
+            'products.*.id' => 'required|exists:products,id',
+            'products.*.quantity' => 'required|integer|min:1',
             'currency' => 'required|string|in:USD,EGP,SAR'
         ];
     }

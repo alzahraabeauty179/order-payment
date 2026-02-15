@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\OrderStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -38,6 +39,7 @@ class Order extends Model
     {
         return [
             'expires_at' => 'datetime',
+            'status' => OrderStatus::class,
         ];
     }
 
@@ -66,4 +68,35 @@ class Order extends Model
     {
         return $this->hasMany(OrderProduct::class);
     }
+
+    /**
+     * Check if the order is expired.
+     */
+    public function isExpired(): bool
+    {
+        return $this->expires_at < now();
+    }
+
+    /**
+     * Check if the order can be paid.
+     */
+    public function canPay(): bool
+    {
+        return $this->status === 'pending' && !$this->isExpired();
+    }
+
+    /**
+     * Check if the order can be canceled.
+     */
+    public function canCancel(): bool
+    {
+        return in_array(
+            $this->status,
+            [
+                OrderStatus::PENDING,
+                OrderStatus::CONFIRMED,
+            ]
+        ) && !$this->isExpired();
+    }
+
 }
