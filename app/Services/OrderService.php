@@ -24,13 +24,14 @@ class OrderService
             $products = collect($data['products']);
             $productIds = $products->pluck('id')->unique();
             $productModels = Product::whereIn('id', $productIds)
-                ->get(['id', 'name', 'price'])
+                ->lockForUpdate()
+                ->get(['id', 'name', 'quantity', 'price'])
                 ->keyBy('id');
 
-            $orderAmountsResult = $this->calculateAmounts($productModels);
+            $orderAmountsResult = $this->calculateAmounts($productModels, $products);
 
             $order = Order::create([
-                'user_id' => auth()->user()->id,
+                'user_id' => auth()->id(),
                 'total_items' => $products->sum('quantity'),
 
                 #TODO: Add tax and discount calculations values
@@ -42,7 +43,7 @@ class OrderService
 
             $this->createOrderItems($products, $order, $productModels);
 
-            $this->decreaseStock($products);
+            $this->decreaseStock($productModels, $products);
 
             DB::commit();
             return $order;
@@ -54,17 +55,43 @@ class OrderService
     }
 
     /**
+     * Calculate the cost for the given products.
+     * 
+     * @param   Collection $productsModel
+     * @param   Collection $products
+     * @return  float|array
+     */
+    public function calculateAmounts(Collection $productsModel, Collection $products): array
+    {
+        $this->validateStock($productsModel, $products);
+
+        $subtotal = 0;
+        foreach ($products as $item) {
+            $product = $productsModel->get($item['id']);
+
+            $subtotal += $product->price * $item['quantity'];
+        }
+
+        #TODO: Add tax and discount calculations to the result
+        return [
+            'subtotal_amount' => $subtotal,
+            'total_amount' => $subtotal,
+        ];
+    }
+
+    /**
      * Validate the stock for the given products.
      * 
+     * @param   Collection $productsModel
      * @param   Collection $products
      * @return  void
      * @throws  Exception
      */
-    private function validateStock(Collection $products): void
+    private function validateStock(Collection $productsModel, Collection $products): void
     {
         foreach ($products as $item) {
 
-            $product = Product::lockForUpdate()->find($item['id']);
+            $product = $productsModel->get($item['id']);
 
             if (!$product) {
                 throw new Exception("Product not found.");
@@ -74,29 +101,6 @@ class OrderService
                 throw new Exception("Insufficient stock for {$product->name}");
             }
         }
-    }
-
-    /**
-     * Calculate the cost for the given products.
-     * 
-     * @param   Collection $products
-     * @return  float|array
-     */
-    public function calculateAmounts(Collection $products): array
-    {
-        $this->validateStock($products);
-
-        $subtotal = 0;
-        foreach ($products as $item) {
-            $product = Product::find($item['id']);
-            $subtotal += $product->price * $item['quantity'];
-        }
-
-        #TODO: Add tax and discount calculations to the result
-        return [
-            'subtotal_amount' => $subtotal,
-            'total_amount' => $subtotal,
-        ];
     }
 
     /**
@@ -127,13 +131,14 @@ class OrderService
     /**
      * Decrease the stock for the given products.
      * 
+     * @param   Collection $productsModel
      * @param   Collection $products
      * @return  void
      */
-    private function decreaseStock(Collection $products): void
+    private function decreaseStock(Collection $productsModel, Collection $products): void
     {
         foreach ($products as $item) {
-            $product = Product::lockForUpdate()->find($item['id']);
+            $product = $productsModel->get($item['id']);
 
             $product->decrement('quantity', $item['quantity']);
         }

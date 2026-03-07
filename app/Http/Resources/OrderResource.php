@@ -16,15 +16,14 @@ class OrderResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'number' => $this->number,
+            'user_id' => $this->user_id,
             'status' => $this->status,
 
             'totals' => [
-                'subtotal' => $this->subtotal_amount,
-                'tax' => $this->tax_amount,
-                'discount' => $this->discount_amount,
-                'total' => $this->total_amount,
-                'currency' => $this->currency,
+                'subtotal' => number_format($this->subtotal_amount, 2) .' '. $this->currency,
+                'tax' => number_format($this->tax_amount, 2) .' '. $this->currency,
+                'discount' => number_format($this->discount_amount, 2) .' '. $this->currency,
+                'total' => number_format($this->total_amount, 2) .' '. $this->currency,
             ],
 
             'meta' => [
@@ -35,12 +34,13 @@ class OrderResource extends JsonResource
 
             'items' => OrderItemResource::collection($this->whenLoaded('items')),
 
-            'payment' => [
-                'status' => $this->payment_status,
-                'amount' => $this->paid_amount,
-                'method' => $this->payment_method,
-                'paid_at' => $this->paid_at,
-            ],
+            #TODO: Add payment information when payment implementation is done
+            // 'payment' => [
+            //     'status' => $this->payment_status,
+            //     'amount' => $this->paid_amount,
+            //     'method' => $this->payment_method,
+            //     'paid_at' => $this->paid_at,
+            // ],
 
             'flags' => [
                 'can_pay' => $this->canPay(),
