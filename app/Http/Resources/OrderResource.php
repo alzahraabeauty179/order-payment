@@ -20,10 +20,10 @@ class OrderResource extends JsonResource
             'status' => $this->status,
 
             'totals' => [
-                'subtotal' => number_format($this->subtotal_amount, 2) .' '. $this->currency,
-                'tax' => number_format($this->tax_amount, 2) .' '. $this->currency,
-                'discount' => number_format($this->discount_amount, 2) .' '. $this->currency,
-                'total' => number_format($this->total_amount, 2) .' '. $this->currency,
+                'subtotal' => round($this->subtotal_amount, 2) .' '. $this->currency,
+                'tax' => round($this->tax_amount, 2) .' '. $this->currency,
+                'discount' => round($this->discount_amount, 2) .' '. $this->currency,
+                'total' => round($this->total_amount, 2) .' '. $this->currency,
             ],
 
             'meta' => [
