@@ -10,6 +10,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:api')->group(function () {
     Route::prefix('orders')->group(function () {
         Route::post('/', [OrderController::class, 'makeOrder']);
-        Route::get('/{order}', [OrderController::class, 'show']);
+        Route::get('/', [OrderController::class, 'index']);
+        Route::post('/{order}', [OrderController::class, 'update']);
     });
 });

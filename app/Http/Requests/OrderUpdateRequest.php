@@ -3,12 +3,13 @@
 namespace App\Http\Requests;
 
 use App\Enums\Currency;
+use App\Enums\OrderStatus;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\Rules\Enum;
 
-class OrderStoreRequest extends FormRequest
+class OrderUpdateRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -26,10 +27,12 @@ class OrderStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'products' => 'required|array|min:1',
+            'id' => 'required|exists:orders,id',
+            'status' => ['nullable', new Enum(OrderStatus::class)],
+            'products' => 'nullable|array|min:1',
             'products.*.id' => 'required_with:products|exists:products,id',
             'products.*.quantity' => 'required_with:products|integer|min:1',
-            'currency' => ['required', new Enum(Currency::class)]
+            'currency' => ['nullable', new Enum(Currency::class)]
         ];
     }
 
