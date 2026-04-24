@@ -27,7 +27,6 @@ class OrderUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'id' => 'required|exists:orders,id',
             'status' => ['nullable', new Enum(OrderStatus::class)],
             'products' => 'nullable|array|min:1',
             'products.*.id' => 'required_with:products|exists:products,id',

@@ -193,8 +193,13 @@ class OrderService
 
                 $newProducts = collect($data['products']);
                 $newProductIds = $newProducts->pluck('id')->unique();
+                $oldProductIds = $order->items()->pluck('product_id');
 
-                $productModels = Product::whereIn('id', $newProductIds)
+                $allProductIds = $oldProductIds
+                    ->merge($newProductIds)
+                    ->unique();
+
+                $productModels = Product::whereIn('id', $allProductIds)
                     ->lockForUpdate()
                     ->get(['id', 'name', 'quantity', 'price'])
                     ->keyBy('id');
@@ -260,9 +265,13 @@ class OrderService
 
             $diff = $newQty - $oldQty;
 
-            //if order's product quantity increased
             if ($diff > 0) {
-                $product = $productModels[$productId];
+                $product = $productModels->get($productId);
+                if (!$product) {
+                    throw new Exception("Product {$productId} not found");
+                }
+
+                \Log::debug("Checking stock for product ID {$productId}: current stock = {$product->quantity}, required additional = {$diff}");
 
                 if ($product->quantity < $diff) {
                     throw new Exception(
@@ -273,13 +282,14 @@ class OrderService
                 $product->decrement('quantity', $diff);
 
             } elseif ($diff < 0) {
-                $productModels[$productId]->increment('quantity', abs($diff));
+                $productModels->get($productId)->increment('quantity', abs($diff));
             }
         }
 
+        // Handle removed products (those that existed before but are not in the new list)
         foreach ($oldItems as $productId => $oldItem) {
             if (!isset($newItems[$productId])) {
-                $productModels[$productId]->increment('quantity', $oldItem->quantity);
+                $productModels->get($productId)->increment('quantity', $oldItem->quantity);
             }
         }
     }
