@@ -92,4 +92,26 @@ class OrderController extends Controller
             ])->setStatusCode(400);
         }
     }
+
+    /**
+     * Delete an existing order.
+     *
+     * @param Order $order
+     * @return JsonResponse
+     */
+    public function destroy(Order $order): JsonResponse
+    {
+        try {
+            $this->orderService->delete($order);
+
+            return response()->json([
+                'message' => 'Order deleted successfully.',
+            ])->setStatusCode(200);
+        } catch (Exception $ex) {
+            return response()->json([
+                'message' => 'Order deletion failed.',
+                'error' => $ex->getMessage(),
+            ])->setStatusCode(400);
+        }
+    }
 }

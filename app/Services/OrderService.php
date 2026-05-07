@@ -294,4 +294,44 @@ class OrderService
         }
     }
 
+    /**
+     * Delete an existing order and restore its products to stock.
+     *
+     * @param Order $order
+     * @return void
+     * @throws Exception
+     */
+    public function delete(Order $order): void
+    {
+        if ((int) $order->user_id !== (int) auth()->id()) {
+            throw new Exception('Order not found.');
+        }
+
+        DB::beginTransaction();
+        try {
+            $items = $order->items()->get();
+            $productIds = $items->pluck('product_id')->unique();
+
+            $productModels = Product::whereIn('id', $productIds)
+                ->lockForUpdate()
+                ->get(['id', 'quantity'])
+                ->keyBy('id');
+
+            foreach ($items as $item) {
+                $product = $productModels->get($item->product_id);
+
+                if ($product) {
+                    $product->increment('quantity', $item->quantity);
+                }
+            }
+
+            $order->delete();
+
+            DB::commit();
+        } catch (Throwable $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+
 }
